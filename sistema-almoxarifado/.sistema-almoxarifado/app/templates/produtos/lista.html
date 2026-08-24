@@ -9,6 +9,14 @@
   </div>
   <div class="action-buttons">
     <a href="/relatorios/html/setores" class="btn btn-outline"><i data-lucide="file-text"></i> Relatórios</a>
+    
+    <!-- BOTÃO DE IMPORTAR PLANILHA -->
+    <button class="btn btn-secondary" onclick="document.getElementById('input-importar').click()">
+      <i data-lucide="upload"></i> Importar Excel
+    </button>
+    <!-- INPUT ESCONDIDO QUE É ACIONADO PELO BOTÃO -->
+    <input type="file" id="input-importar" accept=".xlsx, .csv" style="display: none;" onchange="importarPlanilha(event)" />
+    
     <a href="/produtos/html/cadastro" class="btn btn-accent"><i data-lucide="plus"></i> Novo item</a>
   </div>
 </div>

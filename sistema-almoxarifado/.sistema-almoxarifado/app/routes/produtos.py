@@ -1,5 +1,7 @@
 import os
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+import io
+import pandas as pd
+from fastapi import APIRouter, Depends, HTTPException, status, Request, File, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -55,6 +57,51 @@ def deletar_produto(produto_id: int, db: Session = Depends(get_db)):
     db.delete(produto)
     db.commit()
     return {"mensagem": "Produto deletado"}
+
+@router.post("/importar")
+async def importar_planilha(arquivo: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Recebe um arquivo Excel/CSV e cadastra os produtos em lote."""
+    conteudo = await arquivo.read()
+    
+    try:
+        # Lê o arquivo dependendo da extensão
+        if arquivo.filename.endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(conteudo))
+        else:
+            df = pd.read_excel(io.BytesIO(conteudo))
+            
+        # Preenche valores vazios para evitar erros de leitura
+        df = df.fillna("")
+        produtos_adicionados = 0
+
+        # Itera por cada linha da planilha
+        for index, row in df.iterrows():
+            nome = str(row.get("Nome", "")).strip()
+            
+            if not nome:
+                continue # Pula linhas em branco
+            
+            # Verifica se o produto já existe para não duplicar
+            produto_existente = db.query(Produto).filter(Produto.nome == nome).first()
+            
+            if not produto_existente:
+                novo_produto = Produto(
+                    nome=nome,
+                    categoria=str(row.get("Categoria", "")).strip(),
+                    descricao=str(row.get("Descricao", "")).strip(),
+                    estoque_minimo=int(row.get("Estoque Minimo", 0)) if row.get("Estoque Minimo") else 0,
+                    quantidade_estoque=0 # Todo produto novo entra zerado
+                )
+                db.add(novo_produto)
+                produtos_adicionados += 1
+        
+        db.commit()
+        return {"mensagem": f"{produtos_adicionados} produtos novos importados com sucesso!"}
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Erro ao processar planilha: {str(e)}")
+
 
 # ====== ROTAS HTML ======
 

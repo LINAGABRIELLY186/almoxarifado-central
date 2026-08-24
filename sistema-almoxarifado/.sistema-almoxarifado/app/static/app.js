@@ -137,7 +137,46 @@ async function loadAllData() {
 // 1. GESTÃO DE PRODUTOS
 // =========================================================================
 
+// -------------------------------------------------------------------------
+// IMPORTAR PLANILHA DE PRODUTOS
+// -------------------------------------------------------------------------
 
+async function importarPlanilha(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Cria o pacote de envio do arquivo
+  const formData = new FormData();
+  formData.append('arquivo', file);
+
+  try {
+    // Mostra um feedback de carregamento no botão, se desejar
+    const res = await fetch('/produtos/importar', {
+      method: 'POST',
+      body: formData 
+      // IMPORTANTE: Ao enviar arquivos (FormData), não colocamos 'Content-Type'. 
+      // O próprio navegador cuida disso automaticamente.
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.detail || 'Erro ao importar planilha.');
+    }
+
+    alert(data.mensagem || 'Planilha importada com sucesso!');
+    
+    // Atualiza a tabela imediatamente sem recarregar a página!
+    await fetchProdutos(); 
+
+  } catch (error) {
+    alert('Erro na Importação: ' + error.message);
+  } finally {
+    // Limpa o input para permitir importar o mesmo arquivo novamente, se necessário
+    event.target.value = '';
+    if (window.lucide) lucide.createIcons();
+  }
+}
 // -------------------------------------------------------------------------
 // CARREGAR PRODUTOS
 // -------------------------------------------------------------------------
