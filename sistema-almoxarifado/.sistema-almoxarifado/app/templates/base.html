@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}SIALM - Almoxarifado Municipal{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon.png">
+    <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">
+        <i data-lucide="package"></i>
+      </div>
+      <div class="logo-text">
+        <h2>SIALM</h2>
+        <span>Gestão de suprimentos</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Operação</div>
+      <a href="/" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+        <i data-lucide="layout-grid"></i>
+        <span>Visão geral</span>
+      </a>
+      <a href="/produtos/html/lista" class="nav-item {% if active_page == 'produtos' %}active{% endif %}">
+        <i data-lucide="boxes"></i>
+        <span>Estoque</span>
+      </a>
+      <a href="/movimentacoes/html/saida" class="nav-item {% if active_page == 'mov_saida' %}active{% endif %}">
+        <i data-lucide="arrow-up-right"></i>
+        <span>Registrar Saída</span>
+      </a>
+      <a href="/movimentacoes/html/entrada" class="nav-item {% if active_page == 'mov_entrada' %}active{% endif %}">
+        <i data-lucide="arrow-down-left"></i>
+        <span>Registrar Entrada</span>
+      </a>
+
+      <div class="nav-section-title">Cadastros e análise</div>
+      <a href="/setores/html/cadastro" class="nav-item {% if active_page == 'setores' %}active{% endif %}">
+        <i data-lucide="building-2"></i>
+        <span>Novo Setor</span>
+      </a>
+      <a href="/relatorios/html/setores" class="nav-item {% if active_page == 'relatorios' %}active{% endif %}">
+        <i data-lucide="bar-chart-2"></i>
+        <span>Consumo / Setores</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p>Prefeitura Municipal · Secretaria de Administração</p>
+    </div>
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <div class="main-wrapper">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="municipality-badge">
+          <div class="coat-of-arms">
+            <i data-lucide="shield"></i>
+          </div>
+          <div>
+            <h1>Almoxarifado Municipal</h1>
+            <p>Sistema Integrado de Controle de Suprimentos</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <button class="icon-button" id="theme-toggle" title="Alternar tema" type="button">
+            <i data-lucide="sun" id="theme-icon"></i>
+        </button>
+        
+        <div class="user-profile">
+          <div class="avatar">AM</div>
+          <div class="user-info">
+            <strong>Administrador</strong>
+            <span>Almoxarife-chefe</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="content-area">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+  <script>
+    if (window.lucide) lucide.createIcons();
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

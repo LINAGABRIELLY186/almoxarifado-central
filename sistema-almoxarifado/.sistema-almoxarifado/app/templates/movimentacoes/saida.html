@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% set active_page = "mov_saida" %}
+
+{% block content %}
+<div class="view-header">
+  <div>
+    <h2 class="page-title">Registrar Saída de Materiais</h2>
+    <p class="page-subtitle">Selecione o setor requisitante e adicione os itens solicitados para gerar o comprovante de retirada.</p>
+  </div>
+</div>
+
+<div class="card panel-card" style="max-width: 900px;">
+  <form id="form-saida-multipla" onsubmit="enviarSaidaMultipla(event)">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Setor Requisitante / Destino</label>
+        <select name="setor_id" id="setor_id" class="form-control" required>
+          <option value="" disabled selected>Selecione a secretaria/setor...</option>
+          {% for s in setores %}
+            <option value="{{ s.id }}">{{ s.nome }} ({{ s.secretaria if s.secretaria else 'Geral' }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Nº de Requisição / Protocolo</label>
+        <input type="text" name="nfe" id="nfe" class="form-control" placeholder="Ex: REQ-2026-0042" />
+      </div>
+
+      <div class="form-group full-width">
+        <label>Servidor Responsável pela Retirada</label>
+        <input type="text" name="observacao" id="observacao" class="form-control" placeholder="Nome completo do servidor e cargo/matrícula..." required />
+      </div>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;" />
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="font-size: 1rem; color: #fff; font-weight: 600;">Itens Solicitados</h3>
+      <button type="button" class="btn btn-secondary" onclick="adicionarLinhaItem()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+        <i data-lucide="plus"></i> Adicionar Outro Item
+      </button>
+    </div>
+
+    <!-- TABELA DINÂMICA DE ITENS -->
+    <div class="table-container" style="margin-bottom: 1.5rem;">
+      <table class="custom-table" id="tabela-itens-saida">
+        <thead>
+          <tr>
+            <th style="width: 60%;">Produto</th>
+            <th style="width: 30%;">Quantidade</th>
+            <th style="width: 10%; text-align: center;">Remover</th>
+          </tr>
+        </thead>
+        <tbody id="linhas-produtos-container">
+          <!-- Linha 1 inicial -->
+          <tr class="item-linha">
+            <td>
+              <select name="produto_id[]" class="form-control select-produto" required>
+                <option value="" disabled selected>Selecione o produto...</option>
+                {% for p in produtos %}
+                  <option value="{{ p.id }}">{{ p.nome }} (Estoque disponível: {{ p.quantidade_estoque }} UN)</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td>
+              <input type="number" name="quantidade[]" class="form-control input-qtd" min="1" value="1" required />
+            </td>
+            <td style="text-align: center;">
+              <button type="button" class="action-btn text-danger" onclick="removerLinhaItem(this)" title="Remover item">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="modal-footer" style="padding-top: 1rem;">
+      <button type="submit" class="btn btn-dark-blue" id="btn-submit-saida">
+        <i data-lucide="check-circle"></i> Confirmar Saída e Emitir Recibo
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- TEMPLATE OCULTO PARA NOVAS LINHAS -->
+<select id="select-produtos-template" style="display: none;">
+  <option value="" disabled selected>Selecione o produto...</option>
+  {% for p in produtos %}
+    <option value="{{ p.id }}">{{ p.nome }} (Estoque: {{ p.quantidade_estoque }} UN)</option>
+  {% endfor %}
+</select>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% set active_page = "mov_saida" %}
+
+{% block extra_head %}
+<style>
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #recibo-impressao, #recibo-impressao * {
+      visibility: visible;
+    }
+    #recibo-impressao {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      background: #fff !important;
+      color: #000 !important;
+    }
+    .view-header, .sidebar, .topbar {
+      display: none !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="view-header">
+  <div>
+    <h2 class="page-title">Comprovante de Saída / Requisição</h2>
+    <p class="page-subtitle">Documento oficial de entrega com todos os itens solicitados e campos para assinatura.</p>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-primary" onclick="window.print()">
+      <i data-lucide="printer"></i> Imprimir Recibo
+    </button>
+    <a href="/produtos/html/lista" class="btn btn-secondary">
+      <i data-lucide="arrow-left"></i> Voltar ao Catálogo
+    </a>
+  </div>
+</div>
+
+<div id="recibo-impressao" class="card" style="max-width: 800px; margin: 0 auto; background: #ffffff; color: #1e293b; padding: 2.5rem; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+  
+  <!-- CABEÇALHO -->
+  <div style="text-align: center; border-bottom: 2px solid #334155; padding-bottom: 1.25rem; margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase;">Almoxarifado Municipal</h2>
+    <p style="font-size: 0.95rem; font-weight: 600; color: #475569; margin: 0.35rem 0 0 0;">Secretaria Municipal de Administração</p>
+    <p style="font-size: 0.85rem; color: #64748b; margin: 0.15rem 0 0 0;">Comprovante Consolidado de Saída de Suprimentos</p>
+  </div>
+
+  <!-- DADOS DA REQUISIÇÃO (DATA/HORA E SETOR) -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; background: #f8fafc; padding: 1.25rem; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 1.75rem; font-size: 0.9rem;">
+    <div>
+      <span style="color: #64748b; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Protocolo:</span>
+      <strong id="recibo-protocolo" style="color: #0f172a; font-size: 1.05rem;">#{{ mov.id if mov else '—' }}</strong>
+    </div>
+    <div>
+      <span style="color: #64748b; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Data e Hora da Solicitação:</span>
+      <strong id="recibo-data-hora" style="color: #0f172a;">{{ mov.data_movimentacao.strftime('%d/%m/%Y às %H:%M:%S') if mov and mov.data_movimentacao else '—' }}</strong>
+    </div>
+    <div>
+      <span style="color: #64748b; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Secretaria / Setor Requisitante:</span>
+      <strong id="recibo-setor" style="color: #0f172a;">{{ mov.setor.nome if mov and mov.setor else 'Geral' }}</strong>
+    </div>
+    <div>
+      <span style="color: #64748b; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Nº Requisição / Protocolo:</span>
+      <strong id="recibo-nfe" style="color: #0f172a;">{{ mov.nfe if mov and mov.nfe else 'Sem Protocolo' }}</strong>
+    </div>
+    <div style="grid-column: span 2;">
+      <span style="color: #64748b; display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 700;">Servidor Responsável pela Retirada:</span>
+      <strong id="recibo-responsavel" style="color: #0f172a;">{{ mov.observacao if mov and mov.observacao else 'Servidor Autorizado' }}</strong>
+    </div>
+  </div>
+
+  <!-- TABELA COM TODOS OS MATERIAIS ENTREGUES -->
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 2.5rem; font-size: 0.9rem;">
+    <thead>
+      <tr style="background: #e2e8f0; color: #334155; text-align: left;">
+        <th style="padding: 0.75rem 1rem; border: 1px solid #cbd5e1; width: 65%;">Item / Material</th>
+        <th style="padding: 0.75rem 1rem; border: 1px solid #cbd5e1; width: 35%; text-align: center;">Quantidade</th>
+      </tr>
+    </thead>
+    <tbody id="recibo-itens-tbody">
+      <!-- Fallback para item individual do backend -->
+      <tr>
+        <td style="padding: 0.85rem 1rem; border: 1px solid #cbd5e1; color: #0f172a;">
+          <strong>{{ mov.produto.nome if mov and mov.produto else 'Item de Almoxarifado' }}</strong>
+        </td>
+        <td style="padding: 0.85rem 1rem; border: 1px solid #cbd5e1; text-align: center; color: #0f172a; font-weight: 700;">
+          {{ mov.quantidade if mov else 0 }} UN
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- TERMO DE RECEBIMENTO -->
+  <p style="font-size: 0.82rem; color: #64748b; text-align: justify; margin-bottom: 3.5rem; line-height: 1.4;">
+    Declaro ter recebido os materiais e suprimentos descritos neste comprovante em perfeitas condições de conferência e uso para atendimento às atividades do setor requisitante.
+  </p>
+
+  <!-- LOCAIS DE ASSINATURA -->
+  <div style="display: flex; justify-content: space-between; gap: 3rem; text-align: center;">
+    <div style="flex: 1;">
+      <div style="border-top: 1.5px solid #0f172a; margin-bottom: 0.4rem;"></div>
+      <strong style="display: block; font-size: 0.85rem; color: #0f172a;">Almoxarife Responsável</strong>
+      <span style="font-size: 0.75rem; color: #64748b;">Assinatura / Matrícula</span>
+    </div>
+
+    <div style="flex: 1;">
+      <div style="border-top: 1.5px solid #0f172a; margin-bottom: 0.4rem;"></div>
+      <strong style="display: block; font-size: 0.85rem; color: #0f172a;">Secretaria / Servidor Requisitante</strong>
+      <span style="font-size: 0.75rem; color: #64748b;">Assinatura / Carimbo</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Recupera os dados consolidados da requisição múltipla
+    const dadosSalvos = sessionStorage.getItem('ultimo_recibo_saida');
+    if (dadosSalvos) {
+      try {
+        const dados = JSON.parse(dadosSalvos);
+
+        if (dados.dataHoraFormatada) {
+          document.getElementById('recibo-data-hora').textContent = dados.dataHoraFormatada;
+        }
+        if (dados.setorNome) {
+          document.getElementById('recibo-setor').textContent = dados.setorNome;
+        }
+        if (dados.nfe) {
+          document.getElementById('recibo-nfe').textContent = dados.nfe;
+        }
+        if (dados.responsavel) {
+          document.getElementById('recibo-responsavel').textContent = dados.responsavel;
+        }
+
+        // Renderiza todos os itens na tabela
+        if (dados.itens && dados.itens.length > 0) {
+          const tbody = document.getElementById('recibo-itens-tbody');
+          tbody.innerHTML = dados.itens.map(item => `
+            <tr>
+              <td style="padding: 0.85rem 1rem; border: 1px solid #cbd5e1; color: #0f172a;">
+                <strong>${item.nome}</strong>
+              </td>
+              <td style="padding: 0.85rem 1rem; border: 1px solid #cbd5e1; text-align: center; color: #0f172a; font-weight: 700;">
+                ${item.quantidade} UN
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {
+        console.warn('Erro ao restaurar itens do recibo:', e);
+      }
+    }
+  });
+</script>
+{% endblock %}

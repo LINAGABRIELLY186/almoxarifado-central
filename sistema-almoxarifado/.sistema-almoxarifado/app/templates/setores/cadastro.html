@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% set active_page = "setores" %}
+
+{% block content %}
+<div class="view-header">
+  <div>
+    <h2 class="page-title">Setores e Secretarias</h2>
+    <p class="page-subtitle">Gerencie as unidades administrativas autorizadas a requisitar materiais.</p>
+  </div>
+</div>
+
+<div class="card panel-card" style="max-width: 800px; margin-bottom: 2rem;">
+  <div class="panel-card-header">
+    <i data-lucide="plus-circle" class="warning-icon" style="color: var(--accent-blue);"></i>
+    <h3>Novo Setor</h3>
+  </div>
+  <form id="form-cadastrar-setor" onsubmit="salvarNovoSetor(event)">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nome do Setor / Departamento</label>
+        <input type="text" name="nome" class="form-control" placeholder="Ex: Almoxarifado Central" required />
+      </div>
+      <div class="form-group">
+        <label>Secretaria Vinculada</label>
+        <input type="text" name="secretaria" class="form-control" placeholder="Ex: Secretaria de Administração" required />
+      </div>
+    </div>
+    <div class="modal-footer" style="padding-top: 1rem; margin-top: 0;">
+      <button type="submit" class="btn btn-dark-blue">
+        <i data-lucide="plus"></i> Cadastrar Setor
+      </button>
+    </div>
+  </form>
+</div>
+
+<div class="table-container">
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome do Setor</th>
+        <th>Secretaria</th>
+        <th class="text-right">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if setores %}
+        {% for s in setores %}
+        <tr>
+          <td class="code-col">#{{ s.id }}</td>
+          <td><strong>{{ s.nome }}</strong></td>
+          <td>{{ s.secretaria if s.secretaria else '—' }}</td>
+          <td class="text-right actions-col">
+            <a href="/setores/html/editar/{{ s.id }}" class="action-btn" title="Editar"><i data-lucide="pencil"></i></a>
+            <button type="button" class="action-btn text-danger btn-deletar-setor" title="Excluir" data-id="{{ s.id }}">
+              <i data-lucide="trash-2"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="4" class="text-center" style="padding: 2rem;">Nenhum setor cadastrado até o momento.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

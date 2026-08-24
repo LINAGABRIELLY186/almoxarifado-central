@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% set active_page = "mov_entrada" %}
+
+{% block content %}
+<div class="view-header">
+  <div>
+    <h2 class="page-title">Registrar Entrada de Material</h2>
+    <p class="page-subtitle">Lançamento de novas notas fiscais e reposição de estoque.</p>
+  </div>
+</div>
+
+<div class="card panel-card" style="max-width: 750px;">
+  <form id="form-entrada" onsubmit="enviarMovimentacao(event, 'ENTRADA')">
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label>Produto</label>
+        <select name="produto_id" class="form-control" required>
+          <option value="" disabled selected>Selecione o produto...</option>
+          {% for p in produtos %}
+            <option value="{{ p.id }}">{{ p.codigo ~ ' - ' if p.codigo else '' }}{{ p.nome }} (Estoque atual: {{ p.quantidade_estoque }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Quantidade de Entrada</label>
+        <input type="number" name="quantidade" class="form-control" min="1" value="1" required />
+      </div>
+      <div class="form-group">
+        <label>Nº Nota Fiscal (NFE)</label>
+        <input type="text" name="nfe" class="form-control" placeholder="Ex: NF-e 45892" />
+      </div>
+    </div>
+    <div class="form-group full-width">
+      <label>Observações</label>
+      <textarea name="observacao" class="form-control" rows="3" placeholder="Informações adicionais do fornecedor..."></textarea>
+    </div>
+    <div class="modal-footer" style="padding-top: 1rem;">
+      <button type="submit" class="btn btn-dark-blue">Confirmar Entrada</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% set active_page = "relatorios" %}
+
+{% block extra_head %}
+<style>
+  /* ESTILOS EXCLUSIVOS PARA IMPRESSÃO / SALVAR COMO PDF */
+  @media print {
+    /* Oculta elementos de navegação e controles */
+    .sidebar, .topbar, .view-header, .panel-card, .sidebar-footer {
+      display: none !important;
+    }
+
+    body, .main-wrapper, .content-area {
+      background: #ffffff !important;
+      color: #000000 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow: visible !important;
+    }
+
+    /* Exibe o cabeçalho oficial do relatório impresso */
+    #relatorio-print-header {
+      display: block !important;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid #000;
+      padding-bottom: 1rem;
+      text-align: center;
+    }
+
+    /* Formatação da tabela para folha A4 */
+    .table-container {
+      background: #ffffff !important;
+      border: 1px solid #000000 !important;
+      box-shadow: none !important;
+    }
+
+    .custom-table {
+      width: 100% !important;
+      font-size: 10pt !important;
+      border-collapse: collapse !important;
+    }
+
+    .custom-table th {
+      background-color: #f1f5f9 !important;
+      color: #000000 !important;
+      border: 1px solid #000000 !important;
+      padding: 6px 8px !important;
+      text-transform: uppercase;
+      font-weight: 700 !important;
+    }
+
+    .custom-table td {
+      border: 1px solid #000000 !important;
+      color: #000000 !important;
+      padding: 6px 8px !important;
+    }
+
+    .badge {
+      background: none !important;
+      color: #000000 !important;
+      border: none !important;
+      font-weight: 700 !important;
+      padding: 0 !important;
+    }
+
+    .subtext {
+      color: #475569 !important;
+    }
+  }
+
+  /* Cabeçalho oculto na tela do navegador */
+  #relatorio-print-header {
+    display: none;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- CABEÇALHO VISÍVEL APENAS NA IMPRESSÃO / PDF -->
+<div id="relatorio-print-header">
+  <h2 style="font-size: 14pt; margin: 0; text-transform: uppercase;">Prefeitura Municipal · Almoxarifado Central</h2>
+  <h3 style="font-size: 12pt; margin: 4px 0 0 0; color: #334155;">Relatório Analítico de Consumo por Setor</h3>
+  <p style="font-size: 9pt; margin: 6px 0 0 0; color: #64748b;">
+    Filtro: Setor: <strong>{% if setor_selecionado %}{% for s in setores %}{% if s.id == setor_selecionado %}{{ s.nome }}{% endif %}{% endfor %}{% else %}Todos os Setores{% endif %}</strong> 
+    | Período: <strong>{{ mes_selecionado if mes_selecionado else 'Geral / Todo o Histórico' }}</strong>
+  </p>
+</div>
+
+<!-- CABEÇALHO PADRÃO DO SISTEMA (TELA) -->
+<div class="view-header">
+  <div>
+    <h2 class="page-title">Relatório de Consumo por Setor</h2>
+    <p class="page-subtitle">Demonstrativo e histórico de saídas de materiais requisitados por secretarias.</p>
+  </div>
+  <div class="action-buttons">
+    <a href="/relatorios/exportar/excel{% if setor_selecionado or mes_selecionado %}?{% endif %}{% if setor_selecionado %}setor_id={{ setor_selecionado }}{% endif %}{% if setor_selecionado and mes_selecionado %}&{% endif %}{% if mes_selecionado %}mes={{ mes_selecionado }}{% endif %}" class="btn btn-outline">
+      <i data-lucide="file-spreadsheet"></i> Exportar Excel (.xlsx)
+    </a>
+    <button class="btn btn-primary" onclick="window.print()">
+      <i data-lucide="printer"></i> Imprimir / Gerar PDF
+    </button>
+  </div>
+</div>
+
+<!-- BARRA DE FILTROS -->
+<div class="card panel-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
+  <form method="GET" action="/relatorios/html/setores" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 220px;">
+      <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.4rem;">Filtrar por Setor</label>
+      <select name="setor_id" class="form-control">
+        <option value="">Todos os setores</option>
+        {% for s in setores %}
+          <option value="{{ s.id }}" {% if setor_selecionado == s.id %}selected{% endif %}>{{ s.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="width: 200px;">
+      <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.4rem;">Filtrar por Mês / Ano</label>
+      <input type="month" name="mes" class="form-control" value="{{ mes_selecionado if mes_selecionado else '' }}" />
+    </div>
+
+    <div style="display: flex; gap: 0.5rem;">
+      <button type="submit" class="btn btn-accent">
+        <i data-lucide="filter"></i> Filtrar
+      </button>
+      {% if setor_selecionado or mes_selecionado %}
+        <a href="/relatorios/html/setores" class="btn btn-secondary" title="Limpar Filtros">Limpar</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- TABELA DE RESULTADOS -->
+<div class="table-container">
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th style="width: 15%;">Data</th>
+        <th style="width: 20%;">Setor Requisitante</th>
+        <th style="width: 25%;">Material / Produto</th>
+        <th style="width: 12%; text-align: center;">Quantidade</th>
+        <th style="width: 13%;">Protocolo/NFE</th>
+        <th style="width: 15%;">Responsável / Obs</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if movimentacoes %}
+        {% for m in movimentacoes %}
+        <tr>
+          <td>{{ m.data_movimentacao.strftime('%d/%m/%Y %H:%M') if m.data_movimentacao else '—' }}</td>
+          <td><strong>{{ m.setor.nome if m.setor else 'Geral' }}</strong></td>
+          <td>
+            <strong>{{ m.produto.nome if m.produto else '—' }}</strong>
+            {% if m.produto and m.produto.categoria %}
+              <span class="subtext">{{ m.produto.categoria }}</span>
+            {% endif %}
+          </td>
+          <td style="text-align: center;">
+            <span class="badge badge-warning">{{ m.quantidade }} UN</span>
+          </td>
+          <td>{{ m.nfe if m.nfe else '—' }}</td>
+          <td>{{ m.observacao if m.observacao else '—' }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="6" class="text-center" style="padding: 2rem;">Nenhuma movimentação de saída encontrada para os filtros selecionados.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

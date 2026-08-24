@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% set active_page = "setores" %}
+
+{% block content %}
+<div class="view-header">
+  <div>
+    <h2 class="page-title">Editar Setor: {{ setor.nome }}</h2>
+    <p class="page-subtitle">Atualize os dados cadastrais da unidade administrativa.</p>
+  </div>
+  <a href="/setores/html/cadastro" class="btn btn-secondary">Voltar</a>
+</div>
+
+<div class="card panel-card" style="max-width: 750px;">
+  <form id="form-editar-setor" data-id="{{ setor.id }}">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nome do Setor</label>
+        <input type="text" name="nome" class="form-control" value="{{ setor.nome }}" required />
+      </div>
+      <div class="form-group">
+        <label>Secretaria Vinculada</label>
+        <input type="text" name="secretaria" class="form-control" value="{{ setor.secretaria if setor.secretaria else '' }}" required />
+      </div>
+    </div>
+    <div class="modal-footer" style="padding-top: 1rem;">
+      <button type="submit" class="btn btn-dark-blue">Salvar Alterações</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

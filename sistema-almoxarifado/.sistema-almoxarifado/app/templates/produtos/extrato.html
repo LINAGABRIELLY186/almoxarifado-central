@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% set active_page = "produtos" %}
+
+{% block content %}
+<div class="view-header">
+  <div>
+    <h2 class="page-title">Extrato de Movimentações</h2>
+    <p class="page-subtitle">Histórico de entradas e saídas do item: <strong>{{ produto.nome }}</strong></p>
+  </div>
+  <!-- Rota corrigida para a listagem HTML -->
+  <a href="/produtos/html/lista" class="btn btn-secondary">
+    <i data-lucide="arrow-left"></i> Voltar ao Catálogo
+  </a>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-icon icon-blue"><i data-lucide="box"></i></div>
+    <div class="kpi-data">
+      <span class="kpi-label">SALDO ATUAL</span>
+      <span class="kpi-value">{{ produto.quantidade_estoque }} UN</span>
+    </div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon icon-amber"><i data-lucide="shield-alert"></i></div>
+    <div class="kpi-data">
+      <span class="kpi-label">ESTOQUE MÍNIMO</span>
+      <span class="kpi-value">{{ produto.estoque_minimo }} UN</span>
+    </div>
+  </div>
+</div>
+
+<div class="table-container">
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Tipo</th>
+        <th>Quantidade</th>
+        <th>Setor Destino / Fornecedor</th>
+        <th>NFE / Protocolo</th>
+        <th>Observação</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if movimentacoes %}
+        {% for m in movimentacoes %}
+        <tr>
+          <td>{{ m.data_movimentacao.strftime('%d/%m/%Y às %H:%M') if m.data_movimentacao else '—' }}</td>
+          <td>
+            {% if m.tipo.name == 'ENTRADA' or m.tipo == 'ENTRADA' or m.tipo == 'entrada' %}
+              <span class="badge badge-success">● Entrada</span>
+            {% else %}
+              <span class="badge badge-warning">● Saída</span>
+            {% endif %}
+          </td>
+          <td><strong>{{ m.quantidade }} UN</strong></td>
+          <td>{{ m.setor.nome if m.setor else '—' }}</td>
+          <td>{{ m.nfe if m.nfe else '—' }}</td>
+          <td>{{ m.observacao if m.observacao else '—' }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="6" class="text-center" style="padding: 2rem;">Nenhuma movimentação registrada para este item.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

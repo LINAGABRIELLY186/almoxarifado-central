@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% set active_page = "produtos" %}
+
+{% block content %}
+<div class="view-header">
+  <div>
+    <h2 class="page-title">Catálogo de estoque</h2>
+    <p class="page-subtitle">Cadastro, saldos e níveis mínimos de todos os materiais do almoxarifado.</p>
+  </div>
+  <div class="action-buttons">
+    <a href="/relatorios/html/setores" class="btn btn-outline"><i data-lucide="file-text"></i> Relatórios</a>
+    <a href="/produtos/html/cadastro" class="btn btn-accent"><i data-lucide="plus"></i> Novo item</a>
+  </div>
+</div>
+
+<div class="search-filter-bar">
+  <div class="search-input-wrapper">
+    <i data-lucide="search"></i>
+    <input type="text" id="inventory-search" placeholder="Buscar por nome, categoria, descrição..." onkeyup="filterInventoryTable()" />
+  </div>
+</div>
+
+<div class="table-container">
+  <table class="custom-table" id="inventory-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Item</th>
+        <th>Descrição</th>
+        <th>Saldo</th>
+        <th>Mínimo</th>
+        <th>Situação</th>
+        <th class="text-right">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if produtos %}
+        {% for p in produtos %}
+        <tr>
+          <td class="code-col">#{{ p.id }}</td>
+          <td>
+            <strong>{{ p.nome }}</strong>
+            <span class="subtext">{{ p.categoria if p.categoria else 'Geral' }}</span>
+          </td>
+          <td>{{ p.descricao if p.descricao else '—' }}</td>
+          <td><strong>{{ p.quantidade_estoque }} UN</strong></td>
+          <td>{{ p.estoque_minimo }}</td>
+          <td>
+            {% if p.quantidade_estoque == 0 %}
+              <span class="badge badge-danger">● Crítico / Zerado</span>
+            {% elif p.quantidade_estoque <= p.estoque_minimo %}
+              <span class="badge badge-warning">● Estoque baixo</span>
+            {% else %}
+              <span class="badge badge-success">● Em estoque</span>
+            {% endif %}
+          </td>
+          <td class="text-right actions-col">
+            <a href="/produtos/html/extrato/{{ p.id }}" class="action-btn" title="Ver Movimentações / Extrato">
+              <i data-lucide="history"></i>
+            </a>
+            <a href="/produtos/html/editar/{{ p.id }}" class="action-btn" title="Editar">
+              <i data-lucide="pencil"></i>
+            </a>
+            <button type="button" class="action-btn text-danger btn-deletar-produto" title="Excluir" data-id="{{ p.id }}">
+              <i data-lucide="trash-2"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="7" class="text-center">Nenhum produto cadastrado.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
