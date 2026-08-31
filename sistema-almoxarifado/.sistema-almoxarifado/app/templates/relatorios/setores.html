@@ -81,9 +81,10 @@
 <!-- CABEÇALHO VISÍVEL APENAS NA IMPRESSÃO / PDF -->
 <div id="relatorio-print-header">
   <h2 style="font-size: 14pt; margin: 0; text-transform: uppercase;">Prefeitura Municipal · Almoxarifado Central</h2>
-  <h3 style="font-size: 12pt; margin: 4px 0 0 0; color: #334155;">Relatório Analítico de Consumo por Setor</h3>
+  <h3 style="font-size: 12pt; margin: 4px 0 0 0; color: #334155;">Relatório Analítico de Consumo por Setor e Produto</h3>
   <p style="font-size: 9pt; margin: 6px 0 0 0; color: #64748b;">
-    Filtro: Setor: <strong>{% if setor_selecionado %}{% for s in setores %}{% if s.id == setor_selecionado %}{{ s.nome }}{% endif %}{% endfor %}{% else %}Todos os Setores{% endif %}</strong> 
+    Setor: <strong>{% if setor_selecionado %}{% for s in setores %}{% if s.id | string == setor_selecionado | string %}{{ s.nome }}{% endif %}{% endfor %}{% else %}Todos{% endif %}</strong> 
+    | Produto: <strong>{% if produto_selecionado %}{% for p in produtos %}{% if p.id | string == produto_selecionado | string %}{{ p.nome }}{% endif %}{% endfor %}{% else %}Todos{% endif %}</strong>
     | Período: <strong>{{ mes_selecionado if mes_selecionado else 'Geral / Todo o Histórico' }}</strong>
   </p>
 </div>
@@ -95,7 +96,7 @@
     <p class="page-subtitle">Demonstrativo e histórico de saídas de materiais requisitados por secretarias.</p>
   </div>
   <div class="action-buttons">
-    <a href="/relatorios/exportar/excel{% if setor_selecionado or mes_selecionado %}?{% endif %}{% if setor_selecionado %}setor_id={{ setor_selecionado }}{% endif %}{% if setor_selecionado and mes_selecionado %}&{% endif %}{% if mes_selecionado %}mes={{ mes_selecionado }}{% endif %}" class="btn btn-outline">
+    <a href="/relatorios/exportar/excel{% if setor_selecionado or produto_selecionado or mes_selecionado %}?{% endif %}{% if setor_selecionado %}setor_id={{ setor_selecionado }}{% endif %}{% if setor_selecionado and produto_selecionado %}&{% endif %}{% if produto_selecionado %}produto_id={{ produto_selecionado }}{% endif %}{% if (setor_selecionado or produto_selecionado) and mes_selecionado %}&{% endif %}{% if mes_selecionado %}mes={{ mes_selecionado }}{% endif %}" class="btn btn-outline">
       <i data-lucide="file-spreadsheet"></i> Exportar Excel (.xlsx)
     </a>
     <button class="btn btn-primary" onclick="window.print()">
@@ -104,29 +105,44 @@
   </div>
 </div>
 
-<!-- BARRA DE FILTROS -->
+<!-- BARRA DE FILTROS COM FILTRO POR PRODUTO ADICIONADO -->
 <div class="card panel-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
   <form method="GET" action="/relatorios/html/setores" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 220px;">
+    
+    <!-- Filtro por Setor -->
+    <div style="flex: 1; min-width: 200px;">
       <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.4rem;">Filtrar por Setor</label>
       <select name="setor_id" class="form-control">
         <option value="">Todos os setores</option>
         {% for s in setores %}
-          <option value="{{ s.id }}" {% if setor_selecionado == s.id %}selected{% endif %}>{{ s.nome }}</option>
+          <option value="{{ s.id }}" {% if setor_selecionado | string == s.id | string %}selected{% endif %}>{{ s.nome }}</option>
         {% endfor %}
       </select>
     </div>
 
-    <div style="width: 200px;">
+    <!-- NOVO: Filtro por Produto -->
+    <div style="flex: 1; min-width: 200px;">
+      <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.4rem;">Filtrar por Produto</label>
+      <select name="produto_id" class="form-control">
+        <option value="">Todos os produtos</option>
+        {% for p in produtos %}
+          <option value="{{ p.id }}" {% if produto_selecionado | string == p.id | string %}selected{% endif %}>{{ p.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Filtro por Mês / Ano -->
+    <div style="width: 180px;">
       <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.4rem;">Filtrar por Mês / Ano</label>
       <input type="month" name="mes" class="form-control" value="{{ mes_selecionado if mes_selecionado else '' }}" />
     </div>
 
+    <!-- Botões de Ação -->
     <div style="display: flex; gap: 0.5rem;">
       <button type="submit" class="btn btn-accent">
         <i data-lucide="filter"></i> Filtrar
       </button>
-      {% if setor_selecionado or mes_selecionado %}
+      {% if setor_selecionado or produto_selecionado or mes_selecionado %}
         <a href="/relatorios/html/setores" class="btn btn-secondary" title="Limpar Filtros">Limpar</a>
       {% endif %}
     </div>
@@ -159,7 +175,7 @@
             {% endif %}
           </td>
           <td style="text-align: center;">
-            <span class="badge badge-warning">{{ m.quantidade }} UN</span>
+            <span class="badge badge-warning">{{ m.quantidade }} {{ m.produto.unidade if m.produto and m.produto.unidade else 'UN' }}</span>
           </td>
           <td>{{ m.nfe if m.nfe else '—' }}</td>
           <td>{{ m.observacao if m.observacao else '—' }}</td>

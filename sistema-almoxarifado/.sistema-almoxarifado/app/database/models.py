@@ -16,9 +16,10 @@ class Produto(Base):
     categoria: Mapped[str] = mapped_column(String(100), nullable=True)
     descricao: Mapped[str] = mapped_column(Text, nullable=True)
     quantidade_estoque: Mapped[int] = mapped_column(Integer, default=0)
-    estoque_minimo: Mapped[int] = mapped_column(Integer, default=0) # <--- NOVO CAMPO
-    
+    estoque_minimo: Mapped[int] = mapped_column(Integer, default=0)
+    unidade: Mapped[str] = mapped_column(String(20), default="UN") # <--- Corrigido para mapped_column
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    
     movimentacoes = relationship("Movimentacao", back_populates="produto", cascade="all, delete-orphan")
 
 class Movimentacao(Base):
