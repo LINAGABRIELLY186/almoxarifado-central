@@ -14,7 +14,6 @@
     <button class="btn btn-secondary" onclick="document.getElementById('input-importar').click()">
       <i data-lucide="upload"></i> Importar Excel
     </button>
-    <!-- INPUT ESCONDIDO QUE É ACIONADO PELO BOTÃO -->
     <input type="file" id="input-importar" accept=".xlsx, .csv" style="display: none;" onchange="importarPlanilha(event)" />
     
     <a href="/produtos/html/cadastro" class="btn btn-accent"><i data-lucide="plus"></i> Novo item</a>
@@ -51,7 +50,7 @@
             <span class="subtext">{{ p.categoria if p.categoria else 'Geral' }}</span>
           </td>
           <td>{{ p.descricao if p.descricao else '—' }}</td>
-          <td><strong>{{ p.quantidade_estoque }} UN</strong></td>
+          <td><strong>{{ p.quantidade_estoque }} {{ p.unidade or 'UN' }}</strong></td>
           <td>{{ p.estoque_minimo }}</td>
           <td>
             {% if p.quantidade_estoque == 0 %}
@@ -69,16 +68,85 @@
             <a href="/produtos/html/editar/{{ p.id }}" class="action-btn" title="Editar">
               <i data-lucide="pencil"></i>
             </a>
-            <button type="button" class="action-btn text-danger btn-deletar-produto" title="Excluir" data-id="{{ p.id }}">
+            <button type="button" class="action-btn text-danger btn-deletar-produto" title="Excluir" data-id="{{ p.id }}" data-nome="{{ p.nome }}">
               <i data-lucide="trash-2"></i>
             </button>
           </td>
         </tr>
         {% endfor %}
       {% else %}
-        <tr><td colspan="7" class="text-center">Nenhum produto cadastrado.</td></tr>
+        <tr><td colspan="7" class="text-center" style="padding: 2rem;">Nenhum produto cadastrado.</td></tr>
       {% endif %}
     </tbody>
   </table>
 </div>
+
+<script>
+  // Filtro de busca textual na tabela
+  function filterInventoryTable() {
+    const input = document.getElementById('inventory-search');
+    const filter = input.value.toLowerCase();
+    const rows = document.querySelectorAll('#inventory-table tbody tr');
+
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(filter) ? '' : 'none';
+    });
+  }
+
+  // Importação de planilha Excel / CSV
+  async function importarPlanilha(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('arquivo', file);
+
+    try {
+      const res = await fetch('/relatorios/importar-excel', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erro ao importar planilha.');
+
+      alert(data.mensagem || 'Planilha importada com sucesso!');
+      window.location.reload();
+    } catch (error) {
+      alert('Erro na importação: ' + error.message);
+    } finally {
+      event.target.value = '';
+    }
+  }
+
+  // Exclusão de produto com confirmação e tratamento de integridade
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.btn-deletar-produto').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const nome = btn.dataset.nome || 'este produto';
+
+        if (!confirm(`Tem certeza que deseja excluir o produto "${nome}"?`)) return;
+
+        try {
+          const res = await fetch(`/produtos/${id}`, { method: 'DELETE' });
+          if (!res.ok) {
+            let msg = 'Erro ao excluir o produto.';
+            try {
+              const errData = await res.json();
+              if (errData.detail) msg = errData.detail;
+            } catch (e) {}
+            throw new Error(msg);
+          }
+
+          alert('Produto excluído com sucesso!');
+          window.location.reload();
+        } catch (error) {
+          alert('Erro: ' + error.message);
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

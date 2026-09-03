@@ -26,7 +26,7 @@
       </div>
     </div>
     <div class="modal-footer" style="padding-top: 1rem; margin-top: 0;">
-      <button type="submit" class="btn btn-dark-blue">
+      <button type="submit" id="btn-salvar-setor" class="btn btn-dark-blue">
         <i data-lucide="plus"></i> Cadastrar Setor
       </button>
     </div>
@@ -52,7 +52,7 @@
           <td>{{ s.secretaria if s.secretaria else '—' }}</td>
           <td class="text-right actions-col">
             <a href="/setores/html/editar/{{ s.id }}" class="action-btn" title="Editar"><i data-lucide="pencil"></i></a>
-            <button type="button" class="action-btn text-danger btn-deletar-setor" title="Excluir" data-id="{{ s.id }}">
+            <button type="button" class="action-btn text-danger btn-deletar-setor" title="Excluir" data-id="{{ s.id }}" data-nome="{{ s.nome }}">
               <i data-lucide="trash-2"></i>
             </button>
           </td>
@@ -66,4 +66,67 @@
     </tbody>
   </table>
 </div>
+
+<script>
+  async function salvarNovoSetor(event) {
+    event.preventDefault();
+    const form = event.target;
+    const btn = document.getElementById('btn-salvar-setor');
+
+    const payload = {
+      nome: form.nome.value.trim(),
+      secretaria: form.secretaria.value.trim()
+    };
+
+    btn.disabled = true;
+    btn.innerHTML = 'Salvando...';
+
+    try {
+      const res = await fetch('/setores/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erro ao cadastrar setor.');
+
+      alert('Cadastro concluído com sucesso!');
+      window.location.reload();
+    } catch (error) {
+      alert('Erro: ' + error.message);
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="plus"></i> Cadastrar Setor';
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.btn-deletar-setor').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const nome = btn.dataset.nome || 'este setor';
+
+        if (!confirm(`Tem certeza que deseja excluir o setor "${nome}"?`)) return;
+
+        try {
+          const res = await fetch(`/setores/${id}`, { method: 'DELETE' });
+          if (!res.ok) {
+            let msg = 'Erro ao excluir o setor.';
+            try {
+              const errData = await res.json();
+              if (errData.detail) msg = errData.detail;
+            } catch (e) {}
+            throw new Error(msg);
+          }
+
+          alert('Setor excluído com sucesso!');
+          window.location.reload();
+        } catch (error) {
+          alert('Erro: ' + error.message);
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

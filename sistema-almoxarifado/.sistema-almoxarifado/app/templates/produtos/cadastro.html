@@ -17,16 +17,16 @@
       <!-- Nome do Produto -->
       <div class="form-group full-width">
         <label>Nome do Produto / Material</label>
-        <input type="text" name="nome" class="form-control" placeholder="Ex: Toner HP 105A" required />
+        <input type="text" name="nome" class="form-control" placeholder="Ex: Papel A4 Report" required />
       </div>
 
       <!-- Categoria -->
       <div class="form-group">
         <label>Categoria</label>
-        <input type="text" name="categoria" class="form-control" placeholder="Ex: Informática" />
+        <input type="text" name="categoria" class="form-control" placeholder="Ex: Papelaria" />
       </div>
 
-      <!-- NOVO: Unidade de Medida / Volume -->
+      <!-- Unidade de Medida -->
       <div class="form-group">
         <label>Unidade de Medida / Volume</label>
         <select name="unidade" class="form-control" required>
@@ -55,8 +55,45 @@
     </div>
 
     <div class="modal-footer" style="padding-top: 1rem;">
-      <button type="submit" class="btn btn-dark-blue">Salvar Produto</button>
+      <button type="submit" id="btn-salvar-produto" class="btn btn-dark-blue">Salvar Produto</button>
     </div>
   </form>
 </div>
+
+<script>
+  async function salvarNovoProduto(event) {
+    event.preventDefault();
+    const form = event.target;
+    const btn = document.getElementById('btn-salvar-produto');
+
+    const payload = {
+      nome: form.nome.value.trim(),
+      categoria: form.categoria.value.trim() || null,
+      unidade: form.unidade.value,
+      estoque_minimo: parseInt(form.estoque_minimo.value) || 0,
+      descricao: form.descricao.value.trim() || null
+    };
+
+    btn.disabled = true;
+    btn.innerText = 'Salvando...';
+
+    try {
+      const res = await fetch('/produtos/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erro ao cadastrar produto.');
+
+      alert('Cadastro concluído com sucesso!');
+      window.location.href = '/produtos/html/lista';
+    } catch (error) {
+      alert('Erro: ' + error.message);
+      btn.disabled = false;
+      btn.innerText = 'Salvar Produto';
+    }
+  }
+</script>
 {% endblock %}
